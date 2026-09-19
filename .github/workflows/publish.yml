@@ -28,7 +28,7 @@ jobs:
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha || 'main' }}
           fetch-depth: 0
@@ -39,7 +39,7 @@ jobs:
 
       - name: Install uv
         if: steps.tag.outputs.tag != ''
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
           python-version: "3.12"
@@ -54,7 +54,7 @@ jobs:
         if: steps.tag.outputs.tag != ''
         run: uv build
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v8
         if: steps.tag.outputs.tag != ''
         with:
           name: dist
@@ -73,7 +73,7 @@ jobs:
       # workflow via OIDC, the entire point of trusted publishing.
       id-token: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: dist
           path: dist/
