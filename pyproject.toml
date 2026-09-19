@@ -100,7 +100,8 @@ dev = ["pytest>=8"]
 # python-semantic-release reads/writes the version here rather than in a
 # separate __version__ file, so pyproject.toml stays the single source.
 version_toml = ["pyproject.toml:project.version"]
-build_command = "uv build"
+# No build_command: this action runs in its own container without `uv`, and
+# publish.yml already runs `uv build` on the runner once this tags a release.
 tag_format = "v{version}"
 major_on_zero = false
 commit_message = "chore(release): {version} [skip ci]"
