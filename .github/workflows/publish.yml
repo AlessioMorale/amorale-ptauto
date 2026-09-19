@@ -4,8 +4,12 @@ name: Publish to PyPI
 # version. Triggered by that workflow's completion rather than by the tag
 # push itself: a tag pushed with the default GITHUB_TOKEN does not raise a
 # new `push` event, so `on: push: tags` would never fire here. Checking out
-# the commit release.yml just tagged and looking for a tag on it sidesteps
-# that.
+# `main`'s current tip and looking for a tag on it sidesteps that.
+#
+# This deliberately does not use `github.event.workflow_run.head_sha`: that
+# is the commit which triggered *release.yml* (via its own `workflows: [CI]`
+# trigger), i.e. the commit from *before* semantic-release made and pushed
+# the version-bump commit and tag. It never carries the new tag.
 #
 # Uses PyPI's trusted publishing (OIDC): no API token lives in this repo's
 # secrets at all; PyPI trusts this exact repo + workflow + environment
@@ -30,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.workflow_run.head_sha || 'main' }}
+          ref: main
           fetch-depth: 0
 
       - name: Check for a release tag on this commit
