@@ -54,7 +54,7 @@ jobs:
         if: steps.tag.outputs.tag != ''
         run: uv build
 
-      - uses: actions/upload-artifact@v8
+      - uses: actions/upload-artifact@v7
         if: steps.tag.outputs.tag != ''
         with:
           name: dist
