@@ -1,0 +1,71 @@
+name: CI
+
+# Runs the offline unit suite and a packaging check on every push and PR.
+# tests_network/ (the acceptance suite) is deliberately not run here: it needs
+# a real, GUI Packet Tracer instance with the MCP Control Center extension
+# open, which no hosted runner can provide.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Run unit tests
+        run: uv run pytest tests/ -v
+
+      - name: Validate the example specification
+        # Pure YAML parsing and cross-checking — no Packet Tracer required —
+        # so this still catches a schema regression even though the live
+        # build/apply/test path cannot run in CI.
+        run: uv run ptauto validate examples/two-site-guest-wifi.yaml
+
+  build:
+    name: build package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          python-version: "3.12"
+
+      - name: Build sdist and wheel
+        run: uv build
+
+      - name: Check metadata with twine
+        run: uvx twine check --strict dist/*
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7

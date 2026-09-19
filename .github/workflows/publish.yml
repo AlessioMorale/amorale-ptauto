@@ -1,0 +1,59 @@
+name: Publish to PyPI
+
+# Builds and publishes the package whenever a GitHub Release is published.
+# Uses PyPI's trusted publishing (OIDC): no API token lives in this repo's
+# secrets at all — PyPI trusts this exact repo + workflow + environment
+# combination once it is registered there. See README.md for the one-time
+# setup on pypi.org that this depends on.
+on:
+  release:
+    types: [published]
+  workflow_dispatch: # allows a manual re-run against the current tag
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          python-version: "3.12"
+
+      - name: Run unit tests
+        run: |
+          uv sync --all-extras
+          uv run pytest tests/ -v
+
+      - name: Build sdist and wheel
+        run: uv build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    name: publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/amorale-ptauto
+    permissions:
+      # id-token: write is what lets PyPI verify this run came from this
+      # workflow via OIDC — the entire point of trusted publishing.
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - uses: pypa/gh-action-pypi-publish@release/v1

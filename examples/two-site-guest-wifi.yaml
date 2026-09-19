@@ -1,0 +1,143 @@
+# Simple two-site test topology.
+#
+#   Router-A --- Router-B          point-to-point link between the two sites
+#      |             |
+#    SW-A          SW-B            one switch per side
+#    /  \          /  \
+# PC-A1 PC-A2   PC-B1 PC-B2        two PCs per side, DHCP clients
+#      |
+#   AP-Guest                       a WiFi AP on Router-A's side, its own
+#                                  subnet — a guest network, separate from
+#                                  Router-A's own LAN
+#
+# Static routes carry traffic between the two sites and out to the guest
+# subnet; there is no dynamic routing protocol here on purpose — this is meant
+# to stay small enough to read in one sitting.
+#
+#   ptauto validate examples/two-site-guest-wifi.yaml
+#   ptauto apply    examples/two-site-guest-wifi.yaml
+#   ptauto test     examples/two-site-guest-wifi.yaml tests_network/two_site/
+
+version: 1
+
+project:
+  name: two-site-guest-wifi
+
+components:
+  Router-A:
+    model: 2911
+    position: [280, 120]
+  Router-B:
+    model: 2911
+    position: [680, 120]
+
+  SW-A:
+    model: 2960-24TT
+    position: [160, 280]
+  SW-B:
+    model: 2960-24TT
+    position: [800, 280]
+
+  PC-A1: {model: PC-PT, position: [80, 420]}
+  PC-A2: {model: PC-PT, position: [220, 420]}
+  PC-B1: {model: PC-PT, position: [740, 420]}
+  PC-B2: {model: PC-PT, position: [880, 420]}
+
+  # A plain access point: it broadcasts its default SSID out of the box and
+  # needs no CLI configuration, so it carries no `configurations:` entry below.
+  AP-Guest:
+    model: AccessPoint-PT
+    position: [400, 280]
+
+connections:
+  # Point-to-point link between the two sites' routers.
+  - [Router-A:GigabitEthernet0/1, Router-B:GigabitEthernet0/1]
+
+  # Site A
+  - [Router-A:GigabitEthernet0/0, SW-A:GigabitEthernet0/1]
+  - [SW-A:FastEthernet0/1, PC-A1:FastEthernet0]
+  - [SW-A:FastEthernet0/2, PC-A2:FastEthernet0]
+
+  # Guest network, on its own routed interface off Router-A
+  - [Router-A:GigabitEthernet0/2, AP-Guest:Port 0]
+
+  # Site B
+  - [Router-B:GigabitEthernet0/0, SW-B:GigabitEthernet0/1]
+  - [SW-B:FastEthernet0/1, PC-B1:FastEthernet0]
+  - [SW-B:FastEthernet0/2, PC-B2:FastEthernet0]
+
+configurations:
+  # Both routers are configured as bare IOS commands (`extra_cli`) rather than
+  # through the structured `interfaces:`/`dhcp:`/`static_routes:` keys, to
+  # demonstrate that capability applied to a whole router rather than a single
+  # `line vty` block. `hostname:` stays a structured field: ptauto pushes it
+  # automatically regardless, so repeating it as a raw line would just
+  # duplicate the command.
+  #
+  # The trade-off is real, not cosmetic: ptauto's structural checks (a port
+  # that does not exist on the model, an address outside its own subnet, a
+  # DHCP pool's default-router pointing nowhere) only run against the typed
+  # fields. Bare CLI is still verified line-by-line against the device's own
+  # saved configuration before anything is re-sent — see `ios.py` — but a typo
+  # inside it is caught by Packet Tracer, not by `ptauto validate`.
+  Router-A:
+    hostname: Router-A
+    # Site B's LAN is only reachable through Router-B, across the link (last
+    # line below). Comments have to live out here: inside the `|` block that
+    # follows is literal command text, not YAML, so a `#` line in there would
+    # be sent to the router and rejected as an invalid command.
+    extra_cli: |
+      no ip domain-lookup
+      interface GigabitEthernet0/0
+       description Site A LAN
+       ip address 192.168.1.1 255.255.255.224
+       no shutdown
+      interface GigabitEthernet0/1
+       description Link to Router-B
+       ip address 10.10.10.1 255.255.255.252
+       no shutdown
+      interface GigabitEthernet0/2
+       description Guest WiFi (AP-Guest)
+       ip address 192.168.99.1 255.255.255.224
+       no shutdown
+      ip dhcp excluded-address 192.168.1.1
+      ip dhcp excluded-address 192.168.99.1
+      ip dhcp pool SITE_A
+       network 192.168.1.0 255.255.255.224
+       default-router 192.168.1.1
+      ip dhcp pool GUEST
+       network 192.168.99.0 255.255.255.224
+       default-router 192.168.99.1
+      ip route 192.168.2.0 255.255.255.224 10.10.10.2
+
+  Router-B:
+    hostname: Router-B
+    # Site A's LAN and its guest subnet both sit behind Router-A (last two
+    # lines below) — same reason the equivalent comment on Router-A sits
+    # outside the block: inside it, a `#` line is literal command text.
+    extra_cli: |
+      no ip domain-lookup
+      interface GigabitEthernet0/0
+       description Site B LAN
+       ip address 192.168.2.1 255.255.255.224
+       no shutdown
+      interface GigabitEthernet0/1
+       description Link to Router-A
+       ip address 10.10.10.2 255.255.255.252
+       no shutdown
+      ip dhcp excluded-address 192.168.2.1
+      ip dhcp pool SITE_B
+       network 192.168.2.0 255.255.255.224
+       default-router 192.168.2.1
+      ip route 192.168.1.0 255.255.255.224 10.10.10.1
+      ip route 192.168.99.0 255.255.255.224 10.10.10.1
+
+  SW-A:
+    hostname: SW-A
+  SW-B:
+    hostname: SW-B
+
+  PC-A1: {dhcp_client: true}
+  PC-A2: {dhcp_client: true}
+  PC-B1: {dhcp_client: true}
+  PC-B2: {dhcp_client: true}

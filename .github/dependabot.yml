@@ -1,0 +1,16 @@
+version: 2
+updates:
+  # pyproject.toml / uv.lock — dependencies of the library itself.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      python-dependencies:
+        patterns: ["*"]
+
+  # The workflow files under .github/workflows/.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

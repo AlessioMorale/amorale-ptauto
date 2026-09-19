@@ -1,0 +1,90 @@
+[build-system]
+# PEP 639 (`license` as an SPDX expression + `license-files`) needs hatchling
+# >=1.27; below that floor a wheel builds without a declared license and PyPI
+# rejects the upload at publish time, not at build time.
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+# The distribution name on PyPI — what `pip install` uses. It is independent
+# of the import name: `import ptauto` keeps working regardless, because that
+# is set by `[tool.hatch.build.targets.wheel].packages` below, not by this.
+name = "amorale-ptauto"
+version = "0.1.0"
+description = "Declarative, idempotent network building and testing for Cisco Packet Tracer"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Alessio Morale", email = "alessiomorale@gmail.com" }
+]
+requires-python = ">=3.12"
+keywords = [
+    "packet-tracer",
+    "cisco",
+    "networking",
+    "network-automation",
+    "infrastructure-as-code",
+    "pytest",
+    "yaml",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Education",
+    "Intended Audience :: System Administrators",
+    "Framework :: Pytest",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Education",
+    "Topic :: System :: Networking",
+    "Typing :: Typed",
+]
+dependencies = [
+    # The live connectivity to Packet Tracer (HTTP bridge + file bridge + token)
+    # and the device/cable catalogs are reused from the MCP server project.
+    "packet-tracer-mcp>=0.9,<1",
+    "pydantic>=2.11,<3",
+    "pyyaml>=6",
+    "typer>=0.12",
+    "rich>=13",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[project.urls]
+# TODO: update once the repository has a confirmed home — these assume
+# github.com/alessiomorale/amorale-ptauto.
+Homepage = "https://github.com/alessiomorale/amorale-ptauto"
+Repository = "https://github.com/alessiomorale/amorale-ptauto"
+Issues = "https://github.com/alessiomorale/amorale-ptauto/issues"
+
+[project.scripts]
+ptauto = "ptauto.cli:app"
+
+# The pytest fixtures ship with the library: installing ptauto is enough for a
+# test suite to use `pt_network`, `pt_ping`, … with no conftest boilerplate.
+[project.entry-points.pytest11]
+ptauto = "ptauto.pytest_plugin"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ptauto"]
+
+[tool.hatch.build.targets.sdist]
+# The sdist otherwise carries whatever `.gitignore` does not exclude; `build/`
+# holds locally-generated .pkt files, which have no place in a source
+# distribution and would bloat it for no reason.
+exclude = ["build/"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "network: test that talks to a live Packet Tracer instance",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
