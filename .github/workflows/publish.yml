@@ -1,15 +1,20 @@
 name: Publish to PyPI
 
-# Builds and publishes the package whenever a version tag (vX.Y.Z) is
-# pushed, which release.yml does automatically once it bumps the version.
+# Builds and publishes the package once release.yml has tagged a new
+# version. Triggered by that workflow's completion rather than by the tag
+# push itself: a tag pushed with the default GITHUB_TOKEN does not raise a
+# new `push` event, so `on: push: tags` would never fire here. Checking out
+# the commit release.yml just tagged and looking for a tag on it sidesteps
+# that.
+#
 # Uses PyPI's trusted publishing (OIDC): no API token lives in this repo's
 # secrets at all; PyPI trusts this exact repo + workflow + environment
 # combination once it is registered there. See README.md for the one-time
 # setup on pypi.org that this depends on.
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
   workflow_dispatch: # allows a manual re-run against the current tag
 
 permissions:
@@ -19,24 +24,38 @@ jobs:
   build:
     name: build distribution
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || 'main' }}
+          fetch-depth: 0
+
+      - name: Check for a release tag on this commit
+        id: tag
+        run: echo "tag=$(git describe --tags --exact-match HEAD 2>/dev/null || true)" >> "$GITHUB_OUTPUT"
 
       - name: Install uv
+        if: steps.tag.outputs.tag != ''
         uses: astral-sh/setup-uv@v3
         with:
           enable-cache: true
           python-version: "3.12"
 
       - name: Run unit tests
+        if: steps.tag.outputs.tag != ''
         run: |
           uv sync --all-extras
           uv run pytest tests/ -v
 
       - name: Build sdist and wheel
+        if: steps.tag.outputs.tag != ''
         run: uv build
 
       - uses: actions/upload-artifact@v4
+        if: steps.tag.outputs.tag != ''
         with:
           name: dist
           path: dist/
@@ -44,6 +63,7 @@ jobs:
   publish:
     name: publish to PyPI
     needs: build
+    if: needs.build.outputs.tag != ''
     runs-on: ubuntu-latest
     environment:
       name: pypi

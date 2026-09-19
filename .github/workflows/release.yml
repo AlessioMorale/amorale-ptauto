@@ -10,8 +10,9 @@ name: Release
 #   - tags the commit `vX.Y.Z` and pushes the tag
 #   - publishes a GitHub Release for the tag
 #
-# The pushed tag is what triggers publish.yml to build and upload to PyPI;
-# this workflow never publishes a package itself.
+# This workflow's own completion is what triggers publish.yml to build and
+# upload to PyPI (see that file); this workflow never publishes a package
+# itself.
 on:
   workflow_run:
     workflows: [CI]
