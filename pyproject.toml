@@ -10,7 +10,7 @@ build-backend = "hatchling.build"
 # of the import name: `import ptauto` keeps working regardless, because that
 # is set by `[tool.hatch.build.targets.wheel].packages` below, not by this.
 name = "amorale-ptauto"
-version = "0.1.0"
+version = "1.0.0"
 description = "Declarative, idempotent network building and testing for Cisco Packet Tracer"
 readme = "README.md"
 license = "MIT"
