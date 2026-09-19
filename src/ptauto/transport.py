@@ -1,4 +1,4 @@
-"""Connectivity to Packet Tracer — the same channels the MCP server uses.
+"""Connectivity to Packet Tracer: the same channels the MCP server uses.
 
 ptauto deliberately does not invent its own way into PT. It reuses
 `packet_tracer_mcp`'s primitives:
@@ -65,7 +65,7 @@ class ChannelStatus:
 class BridgeTransport:
     """Sends JavaScript to Packet Tracer and (optionally) waits for a result.
 
-    One command goes over exactly one channel — never both — so nothing can be
+    One command goes over exactly one channel, never both, so nothing can be
     executed twice. HTTP wins when the extension window is open because that is
     the tested path; the file mailbox covers the window-closed case.
     """
@@ -164,7 +164,7 @@ class BridgeTransport:
         return self.identity() == "ours"
 
     def channel(self) -> str:
-        """'http' | 'file' | '' — the channel a command would take right now."""
+        """'http' | 'file' | '': the channel a command would take right now."""
         if self.identity() == "ours" and self.pt_connected():
             return "http"
         if self._file_bridge.pt_alive():

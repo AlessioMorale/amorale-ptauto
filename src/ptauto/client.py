@@ -324,7 +324,7 @@ reportResult(JSON.stringify(out));
 
         PT exposes the saved configuration, not the running one, so `refresh`
         first issues a bare `write memory`. That makes the two identical at the
-        moment of reading — including any change made by hand in the GUI, which
+        moment of reading, including any change made by hand in the GUI, which
         is exactly the drift an idempotent tool has to notice.
         """
         if refresh:
@@ -366,7 +366,7 @@ reportResult(JSON.stringify(out));
         """A host's IP settings.
 
         The gateway and the DNS server have setters in PT's API but no getters,
-        so they are recovered from the device's own XML — which is the same data
+        so they are recovered from the device's own XML, which is the same data
         the GUI shows, read without a round trip per field.
         """
         body = (
@@ -522,7 +522,7 @@ reportResult(JSON.stringify(out));
         """A real ping, run on the device's own console.
 
         The arm/poll JavaScript is imported from the MCP project rather than
-        rewritten: it encodes two things that are easy to get wrong — routers
+        rewritten: it encodes two things that are easy to get wrong: routers
         expose `getCommandLine()` but not `getCommandPrompt()`, and a console
         that has never been touched is still sitting on the initial
         configuration dialog, where the first command is eaten by the prompt.
@@ -549,7 +549,7 @@ reportResult(JSON.stringify(out));
         return PingResult(device, target, "unknown", f"no result after {timeout:g}s")
 
     def resolve(self, device: str, hostname: str, timeout: float = 25.0) -> PingResult:
-        """Ping by name — proves DNS resolution and reachability in one step."""
+        """Ping by name, proves DNS resolution and reachability in one step."""
         return self.ping(device, hostname, timeout=timeout)
 
     # -- project -----------------------------------------------------------
@@ -559,7 +559,7 @@ reportResult(JSON.stringify(out));
 
         The directory is created here, before PT is asked for anything: asked to
         write into a directory that does not exist, PT opens a modal error
-        dialog, and a modal dialog freezes the webview the bridge runs in — the
+        dialog, and a modal dialog freezes the webview the bridge runs in, so the
         failure then looks like "Packet Tracer stopped answering".
         """
         target = path.replace("\\", "/")

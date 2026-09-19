@@ -1,13 +1,15 @@
 name: Publish to PyPI
 
-# Builds and publishes the package whenever a GitHub Release is published.
+# Builds and publishes the package whenever a version tag (vX.Y.Z) is
+# pushed, which release.yml does automatically once it bumps the version.
 # Uses PyPI's trusted publishing (OIDC): no API token lives in this repo's
-# secrets at all — PyPI trusts this exact repo + workflow + environment
+# secrets at all; PyPI trusts this exact repo + workflow + environment
 # combination once it is registered there. See README.md for the one-time
 # setup on pypi.org that this depends on.
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*.*.*"
   workflow_dispatch: # allows a manual re-run against the current tag
 
 permissions:
@@ -48,7 +50,7 @@ jobs:
       url: https://pypi.org/p/amorale-ptauto
     permissions:
       # id-token: write is what lets PyPI verify this run came from this
-      # workflow via OIDC — the entire point of trusted publishing.
+      # workflow via OIDC, the entire point of trusted publishing.
       id-token: write
     steps:
       - uses: actions/download-artifact@v4

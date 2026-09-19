@@ -1,8 +1,8 @@
 """A Packet Tracer stand-in, so the library can be tested without the simulator.
 
-The fake answers the same four questions the planner asks — what is in the
+The fake answers the same four questions the planner asks: what is in the
 workspace, what a router's configuration says, what a host's IP settings are and
-what a server is running — and records what was done to it. That is enough to
+what a server is running, and records what was done to it. That is enough to
 test every decision ptauto makes.
 """
 

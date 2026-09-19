@@ -1,35 +1,34 @@
-# ptauto — declarative networks for Cisco Packet Tracer
+# ptauto: declarative networks for Cisco Packet Tracer
 
-[![CI](https://github.com/alessiomorale/amorale-ptauto/actions/workflows/ci.yml/badge.svg)](https://github.com/alessiomorale/amorale-ptauto/actions/workflows/ci.yml)
+[![CI](https://github.com/AlessioMorale/amorale-ptauto/actions/workflows/ci.yml/badge.svg)](https://github.com/AlessioMorale/amorale-ptauto/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/amorale-ptauto.svg)](https://pypi.org/project/amorale-ptauto/)
 
 Describe a network in YAML; `ptauto` builds it in a running Packet Tracer,
 keeps it that way, and gives a pytest suite the fixtures to prove it works.
 
-The package on PyPI is `amorale-ptauto`; the import stays `import ptauto`
-either way — `amorale-` is only a namespacing prefix on the distribution name.
-The CLI answers to either name, so no install is needed to try it:
+## Try it now
+
+1. Make sure Packet Tracer is open with the **MCP Control Center** extension
+   loaded (see [Requirements](#requirements) if not set up yet).
+2. `uvx amorale-ptauto status` — confirms ptauto can reach it. No install needed.
+3. `git clone https://github.com/AlessioMorale/amorale-ptauto && cd amorale-ptauto`
+   — the example spec and tests live here.
+4. Run the example:
 
 ```bash
-uvx amorale-ptauto status     # is Packet Tracer reachable right now?
-uvx amorale-ptauto models     # what device models can a spec use?
-```
-
-To follow along with the example below, clone this repository first — it
-needs the spec and test files in it:
-
-```bash
-git clone https://github.com/alessiomorale/amorale-ptauto
-cd amorale-ptauto
-
 uvx amorale-ptauto validate examples/two-site-guest-wifi.yaml     # check the file
 uvx amorale-ptauto apply    examples/two-site-guest-wifi.yaml     # build it in Packet Tracer
 uvx amorale-ptauto apply    examples/two-site-guest-wifi.yaml     # ...and again: nothing happens
 uvx amorale-ptauto test     examples/two-site-guest-wifi.yaml tests_network/two_site/
 ```
 
-`uvx amorale-ptauto ...` re-resolves the environment each call (uv caches it,
-so repeat calls are fast); for a persistent `ptauto` on your PATH instead:
+The second `apply` reports *"Nothing to do: Packet Tracer matches the
+specification"* and sends nothing over the bridge. That's the point: the YAML
+file is the network, and any drift (an address changed in the GUI, an
+interface shut, a DNS record deleted) shows up as a named difference on the
+next run.
+
+For a persistent `ptauto` on PATH instead of `uvx` each time:
 
 ```bash
 pip install amorale-ptauto        # or: uv tool install amorale-ptauto
@@ -43,21 +42,31 @@ uv sync
 uv run ptauto validate examples/two-site-guest-wifi.yaml
 ```
 
-Running `apply` a second time reports *"Nothing to do — Packet Tracer matches
-the specification"* and sends nothing over the bridge. That is the point of the
-tool: the YAML file is the network, and any drift — an address changed in the
-GUI, an interface shut, a DNS record deleted — shows up as a named difference on
-the next run.
+The package on PyPI is `amorale-ptauto`; the import stays `import ptauto`
+either way. `amorale-` is only a namespacing prefix on the distribution name.
+
+## Motivation
+
+This started as a side effect of a Master's module in Computer Science with
+Artificial Intelligence that requires Cisco Packet Tracer for lab work.
+Packet Tracer's GUI buries every setting behind its own dialog, several
+clicks deep. Comparing two topology versions, or two instances of the "same"
+router that quietly drifted apart, means clicking through devices one by one
+and holding the differences in your head.
+
+As a software engineer, that has no diff, no history, no way to tell at a
+glance what changed. `ptauto` brings the pattern that already works for
+infrastructure (a single declarative, textual description of the desired
+state) to Packet Tracer labs. A topology becomes a YAML file: diffable with
+`git diff`, reviewable, reproducible from scratch, safe to re-build.
 
 ## Requirements
 
 * Python 3.12+ and [uv](https://docs.astral.sh/uv/)
 * Cisco Packet Tracer 8.x/9.x, open, with the **MCP Control Center** extension
-  loaded (*Extensions > MCP BUILDER*) — the same extension the
+  loaded (*Extensions > MCP BUILDER*), the same extension the
   [MCP-Packet-Tracer](https://github.com/Mats2208/MCP-Packet-Tracer) project
   installs
-
-`ptauto status` says whether it can see Packet Tracer and how.
 
 ## How it talks to Packet Tracer
 
@@ -72,7 +81,7 @@ from the same project, so a model that PT accepts is a model ptauto accepts.
 
 ## The specification
 
-Three sections — components, connections, configurations — as in
+Three sections (components, connections, configurations), as in
 [`examples/two-site-guest-wifi.yaml`](examples/two-site-guest-wifi.yaml):
 
 ```yaml
@@ -131,7 +140,7 @@ schema does not model.
 
 `extra_cli` on a router or switch takes raw IOS commands, applied at
 global-config scope after everything else. Write it as a `|` block exactly the
-way `show running-config` would print it — indentation is what tells ptauto a
+way `show running-config` would print it: indentation is what tells ptauto a
 line is a submode's child rather than a new global command:
 
 ```yaml
@@ -144,8 +153,8 @@ configurations:
       service timestamps log datetime msec
 ```
 
-ptauto groups these the same way IOS does — one block per top-level line, with
-its indented children checked against *that* line's section — and enters/exits
+ptauto groups these the same way IOS does: one block per top-level line, with
+its indented children checked against *that* line's section, and enters/exits
 the submode itself, so `line vty 0 4` does not need a trailing `exit`. Each line
 is still verified literally, so a value IOS rewrites on the way in (a plaintext
 `password` once `service password-encryption` is on, the way `enable_secret` is
@@ -186,7 +195,7 @@ compares it with the specification:
 | server services    | the DNS record database and the HTTP service's state                       |
 
 For IOS devices each piece of configuration is a block with both the commands
-that apply it and the evidence that proves it is already applied — so `no
+that apply it and the evidence that proves it is already applied, so `no
 shutdown`, which never appears in a configuration, is checked as *the absence of
 `shutdown`* rather than as a line to look for. ptauto reads the device's saved
 configuration, issuing a `write memory` first so that what it reads is what the
@@ -197,7 +206,7 @@ instead of claiming the change was needed.
 
 ## Testing a network
 
-The pytest fixtures ship with the package — no `conftest.py` required:
+The pytest fixtures ship with the package: no `conftest.py` required.
 
 ```python
 def test_the_two_sites_can_reach_each_other(pt_network):
@@ -217,7 +226,7 @@ pytest --pt-spec examples/two-site-guest-wifi.yaml --pt-apply tests_network/two_
 | `pt_network` | the network under test: `ping`, `ping_hostname`, `host`, `interface`, `services`, `plan`, `address_of` |
 | `pt_client`  | the raw `PTClient` for anything the facade does not cover                                              |
 | `pt_spec`    | the parsed specification                                                                               |
-| `pt_ping`    | `pt_ping("A", "B")` — asserts, with a readable failure                                                 |
+| `pt_ping`    | `pt_ping("A", "B")`, asserts, with a readable failure                                                 |
 
 Options: `--pt-spec PATH`, `--pt-apply` (build before testing), `--pt-require`
 (fail instead of skip when PT is not running). Without `--pt-require` a suite
@@ -238,7 +247,7 @@ client = PTClient()
 
 plan = Planner(client, spec).build()
 for action in plan.actions:
-    print(action.summary, "—", action.reason)
+    print(action.summary, ":", action.reason)
 
 report = Applier(client).run(plan)
 print(report.ok, len(report.applied))
@@ -261,43 +270,55 @@ src/ptauto/
   pytest_plugin.py  the fixtures, registered as a pytest plugin
   cli.py         the `ptauto` command
 examples/        a worked specification
-tests/           unit tests — no Packet Tracer needed
-tests_network/   acceptance tests — run against a live Packet Tracer
+tests/           unit tests, no Packet Tracer needed
+tests_network/   acceptance tests, run against a live Packet Tracer
 ```
 
-Run the unit tests with `uv run pytest`; they use a Packet Tracer stand-in and
-do not need the simulator.
+Run them with `uv run pytest`.
 
 ## Continuous integration and releasing
 
 `.github/workflows/ci.yml` runs on every push and pull request: the offline
 unit suite (`tests/`) on Python 3.12 and 3.13, `ptauto validate` against the
 example spec, and a packaging check (`uv build` + `twine check --strict`).
-`tests_network/` — the acceptance suite — is deliberately not run there: it
+`tests_network/` (the acceptance suite) is deliberately not run there: it
 needs a real, GUI Packet Tracer instance with the MCP Control Center extension
 open, which no hosted runner can provide.
 
-`.github/workflows/publish.yml` builds and publishes to PyPI whenever a GitHub
-Release is published, using [trusted publishing][trusted-publishing] — OIDC,
-not a stored API token, so there is no secret in this repository to rotate or
-leak. That needs a one-time link on PyPI's side before the first release:
+Versioning is automatic and driven by [Conventional Commits][conventional-commits]
+on `main`: `fix:` bumps the patch version, `feat:` bumps minor, and a
+`BREAKING CHANGE:` footer (or `!` after the type, e.g. `feat!:`) bumps major.
+Commits that don't match a recognized type (or with no releasable change)
+don't trigger a release. `.github/workflows/release.yml` runs
+[python-semantic-release][python-semantic-release] after `ci.yml` succeeds on
+`main`; when a release is due it bumps `version` in `pyproject.toml`, updates
+`CHANGELOG.md`, commits that as `chore(release): X.Y.Z [skip ci]`, and pushes
+a `vX.Y.Z` tag with a matching GitHub Release.
 
-1. Push this repository to GitHub and publish the first release manually, or
-   [create the PyPI project first][first-release] some other way, so
+`.github/workflows/publish.yml` builds and publishes to PyPI whenever a
+`vX.Y.Z` tag is pushed, i.e. automatically, right after release.yml creates
+one, using [trusted publishing][trusted-publishing]: OIDC, not a stored API
+token, so there is no secret in this repository to rotate or leak. That needs
+a one-time link on PyPI's side before the first release:
+
+1. Push this repository to GitHub and publish a release manually (or
+   [create the PyPI project first][first-release] some other way), so
    `amorale-ptauto` exists on PyPI to attach a publisher to.
 2. On [pypi.org][pypi-publishing], under the project's *Publishing* settings,
    add a trusted publisher with:
-   - Owner: `alessiomorale` (or whatever this repo ends up under)
+   - Owner: `AlessioMorale`
    - Repository name: `amorale-ptauto`
    - Workflow name: `publish.yml`
    - Environment name: `pypi`
-3. From then on, publishing a GitHub Release (with a version-matching tag,
-   e.g. `v0.2.0` after bumping `version` in `pyproject.toml`) builds and
-   uploads automatically — no further action needed on PyPI's side.
+3. From then on, every merge to `main` with a releasable Conventional Commit
+   gets tagged and published automatically: no manual version bump, tag, or
+   PyPI-side action needed.
 
 [trusted-publishing]: https://docs.pypi.org/trusted-publishers/
 [pypi-publishing]: https://pypi.org/manage/account/publishing/
 [first-release]: https://docs.pypi.org/trusted-publishers/adding-a-publisher/#adding-a-pending-trusted-publisher-for-pypi
+[conventional-commits]: https://www.conventionalcommits.org/
+[python-semantic-release]: https://python-semantic-release.readthedocs.io/
 
 `.github/dependabot.yml` keeps both the Python dependencies and the workflow
 actions themselves on a weekly update check.
@@ -308,7 +329,7 @@ actions themselves on a weekly update check.
 * An error inside PT's Script Engine opens a modal dialog that freezes the
   bridge until it is dismissed. ptauto guards every command it sends, so it does
   not cause one, but a dialog opened by something else will make ptauto time
-  out — `ptauto status` will say so.
+  out; `ptauto status` will say so.
 * `--prune` never removes PT's own infrastructure objects (the power
   distribution device), and by default a model mismatch is reported rather than
   replaced.

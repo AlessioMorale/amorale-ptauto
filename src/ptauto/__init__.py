@@ -1,4 +1,4 @@
-"""ptauto — declarative, idempotent networks for Cisco Packet Tracer.
+"""ptauto: declarative, idempotent networks for Cisco Packet Tracer.
 
     from ptauto import load_spec, PTClient, Planner, Applier
 

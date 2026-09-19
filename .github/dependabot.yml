@@ -1,6 +1,6 @@
 version: 2
 updates:
-  # pyproject.toml / uv.lock — dependencies of the library itself.
+  # pyproject.toml / uv.lock: dependencies of the library itself.
   - package-ecosystem: "pip"
     directory: "/"
     schedule:

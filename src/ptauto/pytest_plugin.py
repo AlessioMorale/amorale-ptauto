@@ -1,6 +1,6 @@
 """pytest fixtures for testing a Packet Tracer network.
 
-Installing ptauto is enough — the plugin registers itself through the
+Installing ptauto is enough: the plugin registers itself through the
 `pytest11` entry point, so a suite needs no conftest.py.
 
     $ pytest --pt-spec examples/two-site-guest-wifi.yaml
@@ -76,7 +76,7 @@ def pt_spec_path(pytestconfig: pytest.Config) -> Path:
         if candidate.exists():
             return candidate
     pytest.skip(
-        "no network specification found — pass --pt-spec PATH or add network.yaml "
+        "no network specification found, pass --pt-spec PATH or add network.yaml "
         "to the project root"
     )
 
@@ -101,7 +101,7 @@ def pt_client(pt_transport: BridgeTransport, pytestconfig: pytest.Config) -> PTC
     client = PTClient(pt_transport)
     if not client.is_connected():
         message = (
-            "Packet Tracer is not reachable — open it with the MCP Control Center "
+            "Packet Tracer is not reachable, open it with the MCP Control Center "
             "extension (Extensions > MCP BUILDER)"
         )
         if pytestconfig.getoption("--pt-require"):
@@ -130,7 +130,7 @@ def pt_network(pt_client: PTClient, pt_spec, pytestconfig: pytest.Config) -> Net
 
 @pytest.fixture
 def pt_ping(pt_network: Network):
-    """`pt_ping("PC-A", "PC-B")` — asserts, with a readable failure."""
+    """`pt_ping("PC-A", "PC-B")`, asserts, with a readable failure."""
 
     def _ping(source: str, target: str, timeout: float = 25.0):
         result = pt_network.ping(source, target, timeout=timeout)

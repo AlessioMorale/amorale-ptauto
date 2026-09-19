@@ -1,4 +1,4 @@
-"""Deciding what has to change — the part that makes `apply` idempotent.
+"""Deciding what has to change: the part that makes `apply` idempotent.
 
 The planner reads what Packet Tracer actually has, compares it with the
 specification, and emits one action per real difference. A converged network
@@ -267,8 +267,8 @@ class Planner:
     ) -> None:
         if not settings.used_fields(DeviceSettings.IOS_FIELDS):
             # Nothing was asked of this device, so leave it exactly as it is.
-            # `render_blocks` always includes a default hostname push otherwise
-            # — harmless for a router or switch, but some IOS-categorised
+            # `render_blocks` always includes a default hostname push otherwise,
+            # harmless for a router or switch, but some IOS-categorised
             # models (a plain AccessPoint-PT, unlike an enterprise 3702i) accept
             # no CLI at all in Packet Tracer. Pushing that implicit default
             # would not converge; it would fail outright, every single run.
@@ -284,7 +284,7 @@ class Planner:
 
         pending: list[ConfigBlock] = []
         # A device this run is about to create needs everything, and that is not
-        # guesswork — "unverified" is reserved for a device that exists but whose
+        # guesswork: "unverified" is reserved for a device that exists but whose
         # configuration ptauto could not read.
         unverified = False
         for block in blocks:

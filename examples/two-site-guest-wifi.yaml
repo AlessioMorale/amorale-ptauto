@@ -7,11 +7,11 @@
 # PC-A1 PC-A2   PC-B1 PC-B2        two PCs per side, DHCP clients
 #      |
 #   AP-Guest                       a WiFi AP on Router-A's side, its own
-#                                  subnet — a guest network, separate from
+#                                  subnet, a guest network, separate from
 #                                  Router-A's own LAN
 #
 # Static routes carry traffic between the two sites and out to the guest
-# subnet; there is no dynamic routing protocol here on purpose — this is meant
+# subnet; there is no dynamic routing protocol here on purpose: this is meant
 # to stay small enough to read in one sitting.
 #
 #   ptauto validate examples/two-site-guest-wifi.yaml
@@ -78,7 +78,7 @@ configurations:
   # that does not exist on the model, an address outside its own subnet, a
   # DHCP pool's default-router pointing nowhere) only run against the typed
   # fields. Bare CLI is still verified line-by-line against the device's own
-  # saved configuration before anything is re-sent — see `ios.py` — but a typo
+  # saved configuration before anything is re-sent (see `ios.py`), but a typo
   # inside it is caught by Packet Tracer, not by `ptauto validate`.
   Router-A:
     hostname: Router-A
@@ -113,7 +113,7 @@ configurations:
   Router-B:
     hostname: Router-B
     # Site A's LAN and its guest subnet both sit behind Router-A (last two
-    # lines below) — same reason the equivalent comment on Router-A sits
+    # lines below), same reason the equivalent comment on Router-A sits
     # outside the block: inside it, a `#` line is literal command text.
     extra_cli: |
       no ip domain-lookup

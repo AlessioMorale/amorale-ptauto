@@ -6,7 +6,7 @@ requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
-# The distribution name on PyPI — what `pip install` uses. It is independent
+# The distribution name on PyPI: what `pip install` uses. It is independent
 # of the import name: `import ptauto` keeps working regardless, because that
 # is set by `[tool.hatch.build.targets.wheel].packages` below, not by this.
 name = "amorale-ptauto"
@@ -57,16 +57,16 @@ dependencies = [
 test = ["pytest>=8"]
 
 [project.urls]
-# TODO: update once the repository has a confirmed home — these assume
-# github.com/alessiomorale/amorale-ptauto.
-Homepage = "https://github.com/alessiomorale/amorale-ptauto"
-Repository = "https://github.com/alessiomorale/amorale-ptauto"
-Issues = "https://github.com/alessiomorale/amorale-ptauto/issues"
+# TODO: update once the repository has a confirmed home; these assume
+# github.com/AlessioMorale/amorale-ptauto.
+Homepage = "https://github.com/AlessioMorale/amorale-ptauto"
+Repository = "https://github.com/AlessioMorale/amorale-ptauto"
+Issues = "https://github.com/AlessioMorale/amorale-ptauto/issues"
 
 [project.scripts]
 # Two names for the same command. `uvx amorale-ptauto ...` needs a script
-# literally named after the distribution — that's how `uvx` (`uv tool run`)
-# picks the executable when none is given explicitly — while `ptauto` is the
+# literally named after the distribution (that's how `uvx` (`uv tool run`)
+# picks the executable when none is given explicitly), while `ptauto` is the
 # short name anyone who `pip install`s or `uv add`s the package actually types.
 ptauto = "ptauto.cli:app"
 amorale-ptauto = "ptauto.cli:app"
@@ -93,3 +93,24 @@ markers = [
 
 [dependency-groups]
 dev = ["pytest>=8"]
+
+[tool.semantic_release]
+# Conventional Commits on `main` drive the version: `fix:` -> patch, `feat:`
+# -> minor, a `BREAKING CHANGE:` footer (or `!` after the type) -> major.
+# python-semantic-release reads/writes the version here rather than in a
+# separate __version__ file, so pyproject.toml stays the single source.
+version_toml = ["pyproject.toml:project.version"]
+build_command = "uv build"
+tag_format = "v{version}"
+major_on_zero = false
+commit_message = "chore(release): {version} [skip ci]\n\n{version}"
+commit_author = "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
+
+[tool.semantic_release.branches.main]
+match = "main"
+
+[tool.semantic_release.remote]
+type = "github"
+
+[tool.semantic_release.changelog]
+exclude_commit_patterns = ["^chore\\(release\\):"]

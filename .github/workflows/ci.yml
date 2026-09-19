@@ -41,7 +41,7 @@ jobs:
         run: uv run pytest tests/ -v
 
       - name: Validate the example specification
-        # Pure YAML parsing and cross-checking — no Packet Tracer required —
+        # Pure YAML parsing and cross-checking, no Packet Tracer required,
         # so this still catches a schema regression even though the live
         # build/apply/test path cannot run in CI.
         run: uv run ptauto validate examples/two-site-guest-wifi.yaml

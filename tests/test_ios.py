@@ -207,7 +207,7 @@ def test_a_leading_indented_line_with_nothing_to_attach_to_is_kept_not_dropped()
 def test_no_shutdown_inside_extra_cli_converges_like_the_structured_renderer_does():
     """Regression: IOS never writes `no shutdown` back into a saved
     configuration, so checking for it as literal required text meant an
-    interface stanza written as bare CLI could never converge — every apply
+    interface stanza written as bare CLI could never converge: every apply
     would re-push it forever, even though the interface really was up."""
     settings = DeviceSettings(
         extra_cli=[

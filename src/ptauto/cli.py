@@ -97,7 +97,7 @@ def _print_plan(plan: Plan, verbose: bool = False) -> None:
         console.print(f"[yellow]warning[/yellow] {warning}")
 
     if plan.is_empty:
-        console.print("[green]Nothing to do — Packet Tracer matches the specification.[/green]")
+        console.print("[green]Nothing to do: Packet Tracer matches the specification.[/green]")
         if verbose and plan.unchanged:
             for item in plan.unchanged:
                 console.print(f"  [dim]= {item}[/dim]")
@@ -261,7 +261,7 @@ def apply(
             for device, address in leases.items():
                 if not address:
                     console.print(
-                        f"  [yellow]{device}[/yellow] no lease yet — check the pool "
+                        f"  [yellow]{device}[/yellow] no lease yet, check the pool "
                         f"and the cabling"
                     )
 
@@ -321,7 +321,7 @@ def destroy(
     topology = client.topology()
     present = [name for name in network.components if name in topology.devices]
     if not present:
-        console.print("Nothing to remove — none of the spec's devices are in the workspace.")
+        console.print("Nothing to remove: none of the spec's devices are in the workspace.")
         raise typer.Exit(code=0)
 
     console.print(f"This deletes {len(present)} device(s): {', '.join(present)}")

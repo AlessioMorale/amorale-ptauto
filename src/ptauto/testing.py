@@ -1,6 +1,6 @@
 """The facade a pytest suite talks to.
 
-A test should read like the thing it is checking — `net.ping("PC-A1",
+A test should read like the thing it is checking: `net.ping("PC-A1",
 "PC-B1")`, not four bridge calls and a regex. `Network` resolves device
 names to the addresses they actually hold in Packet Tracer (which is the only
 sensible way to test a DHCP client), and exposes the planner so a suite can
@@ -95,7 +95,7 @@ class Network:
     ) -> PingResult:
         """Ping from one device to another device, address or hostname.
 
-        A first ping across a cold ARP cache loses its first packet — every
+        A first ping across a cold ARP cache loses its first packet: every
         Packet Tracer session shows `Sent = 4, Received = 3` the first time two
         hosts talk. That is a warm-up artefact, not a fault, so a partial result
         is repeated once and the second attempt is the answer. Pass

@@ -1,7 +1,7 @@
 """The bridge client, exercised against a real PTCommandBridge.
 
 The bridge is the upstream MCP project's; what is tested here is ptauto's side
-of the conversation — that it signs its requests, correlates a result with the
+of the conversation: that it signs its requests, correlates a result with the
 request that asked for it, and refuses to pretend PT is there when it is not.
 """
 

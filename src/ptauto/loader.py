@@ -3,7 +3,7 @@
 Parsing is the cheap half; the valuable half is the cross-checking that happens
 afterwards, against the same device catalog Packet Tracer is driven with. A
 typo'd port name, a cable between two ports that cannot take one, two devices
-claiming the same interface — all of that is caught here, before anything is
+claiming the same interface: all of that is caught here, before anything is
 sent to PT, because a half-built topology is much more annoying than a rejected
 file.
 """
@@ -36,7 +36,7 @@ def load_spec(path: str | Path) -> NetworkSpec:
     except FileNotFoundError:
         raise SpecError(f"No such specification file: {path}") from None
     except yaml.YAMLError as exc:
-        raise SpecError(f"{path}: invalid YAML — {exc}") from None
+        raise SpecError(f"{path}: invalid YAML: {exc}") from None
     if raw is None:
         raise SpecError(f"{path} is empty")
     if not isinstance(raw, dict):
@@ -134,7 +134,7 @@ def _split_inline(text: str, where: str) -> list[str]:
         if separator in text:
             return [part.strip() for part in text.split(separator, 1)]
     raise SpecError(
-        f"{where}: {text!r} is not a connection — write 'A:port <-> B:port' "
+        f"{where}: {text!r} is not a connection, write 'A:port <-> B:port' "
         f"or use the list form"
     )
 
@@ -147,7 +147,7 @@ def _split_endpoint(text: Any, where: str) -> tuple[str, str]:
             raise SpecError(f"{where}: an endpoint mapping needs `device` and `port`") from None
     if not isinstance(text, str) or ":" not in text:
         raise SpecError(
-            f"{where}: {text!r} is not an endpoint — write it as 'DeviceName:PortName'"
+            f"{where}: {text!r} is not an endpoint, write it as 'DeviceName:PortName'"
         )
     device, _, port = text.partition(":")
     device, port = device.strip(), port.strip()
@@ -188,7 +188,7 @@ def validate_spec(spec: NetworkSpec) -> None:
 def _check_components(spec: NetworkSpec) -> list[str]:
     problems = []
     if not spec.components:
-        problems.append("`components` is empty — there is nothing to build")
+        problems.append("`components` is empty: there is nothing to build")
     for name, component in spec.components.items():
         if not name.strip():
             problems.append("a component has an empty name")
@@ -228,7 +228,7 @@ def _check_connections(spec: NetworkSpec) -> list[str]:
             previous = claimed.get((device, port))
             if previous is not None:
                 problems.append(
-                    f"{device}:{port} is cabled twice — by '{previous}' and by "
+                    f"{device}:{port} is cabled twice, by '{previous}' and by "
                     f"'{connection}'. A PT port takes one cable."
                 )
             else:
@@ -276,7 +276,7 @@ def _check_configurations(spec: NetworkSpec) -> list[str]:
             if settings.dhcp_client and settings.address:
                 problems.append(
                     f"{name}: `dhcp_client: true` and a static `address:` "
-                    f"contradict each other — pick one."
+                    f"contradict each other: pick one."
                 )
             if settings.address is None and not settings.dhcp_client:
                 problems.append(
@@ -302,7 +302,7 @@ def _check_ios_interfaces(name: str, info, settings: DeviceSettings) -> list[str
             )
         if iface.mode and info.category != "switch":
             problems.append(
-                f"{name}: `mode: {iface.mode}` on {port} — switchport settings "
+                f"{name}: `mode: {iface.mode}` on {port}: switchport settings "
                 f"only apply to a switch."
             )
     if settings.dhcp and info.category != "router":
@@ -334,7 +334,7 @@ def _check_addressing(spec: NetworkSpec) -> list[str]:
             key = str(iface_obj.ip)
             if key in addresses:
                 problems.append(
-                    f"{label} and {addresses[key]} are both {key} — duplicate address"
+                    f"{label} and {addresses[key]} are both {key}: duplicate address"
                 )
             else:
                 addresses[key] = label

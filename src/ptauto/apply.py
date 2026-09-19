@@ -77,7 +77,7 @@ class ApplyReport:
 
 class Applier:
     """Runs a plan. One action at a time, stopping on the first failure unless
-    told otherwise — a half-applied topology is easier to reason about when the
+    told otherwise: a half-applied topology is easier to reason about when the
     failure is where it happened."""
 
     def __init__(

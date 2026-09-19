@@ -1,0 +1,49 @@
+name: Release
+
+# Runs after CI succeeds on main. python-semantic-release inspects the
+# Conventional Commits since the last release to decide whether a version
+# bump is due (fix: -> patch, feat: -> minor, a `BREAKING CHANGE:` footer or
+# `!` -> major), and if so:
+#   - bumps `version` in pyproject.toml
+#   - updates CHANGELOG.md
+#   - commits that as `chore(release): X.Y.Z [skip ci]` on main
+#   - tags the commit `vX.Y.Z` and pushes the tag
+#   - publishes a GitHub Release for the tag
+#
+# The pushed tag is what triggers publish.yml to build and upload to PyPI;
+# this workflow never publishes a package itself.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: semantic release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+          python-version: "3.12"
+
+      - name: Python Semantic Release
+        uses: python-semantic-release/python-semantic-release@v9.15.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}

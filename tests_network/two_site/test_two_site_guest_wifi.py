@@ -3,8 +3,8 @@
     ptauto test examples/two-site-guest-wifi.yaml tests_network/two_site/
 
 Two routers joined by a point-to-point link, one switch and two PCs per site,
-and a guest WiFi AP on Router-A's side. Nothing here needs a routing protocol —
-each router has one static route per remote subnet — so these tests are really
+and a guest WiFi AP on Router-A's side. Nothing here needs a routing protocol:
+each router has one static route per remote subnet, so these tests are really
 checking that the static routes are actually carrying traffic, not just sitting
 in the configuration.
 """
@@ -65,7 +65,7 @@ def test_the_point_to_point_link_is_up(pt_network):
 def test_the_two_sites_reach_each_other_through_the_static_routes(pt_network, source, target):
     """The whole point of this topology: each router only knows the remote
     subnet because of an explicit `static_routes:` entry, not a routing
-    protocol — so a successful ping here proves those routes are correct, not
+    protocol, so a successful ping here proves those routes are correct, not
     just present in the configuration."""
     result = pt_network.ping(source, target)
     assert result.ok, describe_ping(result)
@@ -82,7 +82,7 @@ def test_the_guest_network_is_its_own_subnet(pt_network):
 
 
 def test_the_guest_networks_gateway_is_reachable_from_both_sites(pt_network):
-    """The guest subnet's own router interface is reachable end to end — the
+    """The guest subnet's own router interface is reachable end to end: the
     part of "does this route work" that does not depend on a wireless client
     actually being associated to the AP."""
     assert pt_network.ping("PC-A1", "192.168.99.1").ok
@@ -91,7 +91,7 @@ def test_the_guest_networks_gateway_is_reachable_from_both_sites(pt_network):
 
 def test_the_access_point_is_placed_and_cabled(pt_network):
     """A plain AccessPoint-PT takes no CLI configuration in Packet Tracer, so
-    there is nothing to converge on the device itself — only that it exists
+    there is nothing to converge on the device itself, only that it exists
     and is on the wire is something ptauto can check."""
     topology = pt_network.client.topology()
     ap = topology.devices.get("AP-Guest")

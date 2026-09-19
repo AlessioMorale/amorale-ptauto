@@ -1,4 +1,4 @@
-"""The declarative network specification — the shape of the YAML file.
+"""The declarative network specification: the shape of the YAML file.
 
 Three sections, as the requirements describe them:
 
@@ -7,7 +7,7 @@ Three sections, as the requirements describe them:
     configurations  what settings each device carries
 
 `components` may carry a `config:` block of its own, in which case the
-`configurations` section is optional — the two are merged by the loader, with
+`configurations` section is optional: the two are merged by the loader, with
 the standalone section winning on conflict.
 
 Every model is strict (`extra="forbid"`): a mistyped key is a loud error at load
@@ -205,7 +205,7 @@ class DeviceSettings(Strict):
         description=(
             "Bare IOS commands, applied at global-config scope after everything "
             "else. Indentation matters: a line indented under a preceding "
-            "line — e.g. ' login' under 'line vty 0 4' — is treated as that "
+            "line (e.g. ' login' under 'line vty 0 4') is treated as that "
             "line's submode child, exactly as `show running-config` prints it."
         ),
     )

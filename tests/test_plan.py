@@ -280,7 +280,7 @@ def test_apply_reports_each_action_and_stops_at_the_first_failure(fake_pt, spec)
 def test_an_ios_device_with_no_configuration_at_all_is_left_alone(fake_pt, spec):
     """Regression: render_blocks always pushes a default hostname, which used
     to generate a configure_ios action for every IOS-category device even when
-    the spec asked for nothing — fatal for a model (a plain AP) that Packet
+    the spec asked for nothing, fatal for a model (a plain AP) that Packet
     Tracer will not accept configureIosDevice on at all."""
     converge(fake_pt)
     fake_pt.devices["AP1"] = device("AP1", "AccessPoint-PT", ("Port 0",), x=400, y=250)

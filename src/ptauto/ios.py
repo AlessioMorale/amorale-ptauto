@@ -111,7 +111,7 @@ class ConfigBlock:
         return True
 
     def missing(self, config: IosConfig | None) -> list[str]:
-        """The specific evidence that is absent — for a readable plan."""
+        """The specific evidence that is absent, for a readable plan."""
         if config is None:
             return ["device configuration could not be read"]
         out = []
@@ -164,7 +164,7 @@ def render_blocks(device: str, settings: DeviceSettings, category: str) -> list[
         )
 
     if settings.enable_secret:
-        # The secret is stored hashed, so its presence — not its value — is what
+        # The secret is stored hashed, so its presence (not its value) is what
         # can be verified; the command itself is idempotent.
         blocks.append(
             ConfigBlock(
@@ -219,12 +219,12 @@ def render_blocks(device: str, settings: DeviceSettings, category: str) -> list[
     return blocks
 
 
-# IOS never writes `no shutdown` back into a saved configuration — an
+# IOS never writes `no shutdown` back into a saved configuration: an
 # interface that is up is one with no `shutdown` line at all, which is exactly
 # how `_interface_block` above already checks it (`forbidden=["shutdown"]`,
 # not `required=["no shutdown"]`). The generic line-by-line matcher below has
 # no way to know that on its own, so without this one line it would treat a
-# bare `no shutdown` as literal text to find — text IOS will never write —
+# bare `no shutdown` as literal text to find (text IOS will never write)
 # and report the interface as pending forever. It is the same class of
 # "IOS rewrites this" case the module already documents for `enable_secret`,
 # just narrow and common enough to special-case rather than leave as a trap.
@@ -236,7 +236,7 @@ def _extra_cli_blocks(lines: list[str]) -> list[ConfigBlock]:
 
     A line with no leading whitespace opens global config (or a submode, if
     it's something like `line vty 0 4`); every line indented under it is that
-    line's child, checked against the *submode's* text, not the top level —
+    line's child, checked against the *submode's* text, not the top level,
     which is exactly how the earlier version of this function got it wrong.
     Checking every line against `has_global` meant a login banner or an ACL
     entry sitting one line deep could never be found, so ptauto reported it as
@@ -253,7 +253,7 @@ def _extra_cli_blocks(lines: list[str]) -> list[ConfigBlock]:
             return
         if required or forbidden:
             # Mirrors every other multi-line block in this module: enter,
-            # configure, leave — unless the caller's own lines already do.
+            # configure, leave, unless the caller's own lines already do.
             if _norm(commands[-1]) not in ("exit", "end"):
                 commands.append(" exit")
             blocks.append(
