@@ -82,6 +82,10 @@ class Planner:
         self.plan = Plan()
         self.topology: ObservedTopology = ObservedTopology()
         self._models: dict[str, ModelInfo] = {}
+        # Devices getting a create_device/replace_device action: any cable PT
+        # currently reports on them is about to disappear along with the
+        # device, so _plan_links must not treat it as already satisfied.
+        self._recreated_devices: set[str] = set()
 
     # -- entry point ------------------------------------------------------
 
@@ -114,6 +118,7 @@ class Planner:
                         payload={"info": info, "x": x, "y": y},
                     )
                 )
+                self._recreated_devices.add(name)
                 continue
 
             if not _same_model(observed.model, info.pt_type):
@@ -128,6 +133,7 @@ class Planner:
                             destructive=True,
                         )
                     )
+                    self._recreated_devices.add(name)
                 else:
                     self.plan.warnings.append(
                         f"{name} is a {observed.model} in PT but the spec says "
@@ -180,17 +186,25 @@ class Planner:
         for connection in self.spec.connections:
             key = connection.key
             desired_keys.add(key)
-            if key in observed_links:
+            endpoints_recreated = (
+                connection.device_a in self._recreated_devices
+                or connection.device_b in self._recreated_devices
+            )
+            if key in observed_links and not endpoints_recreated:
                 self.plan.unchanged.append(f"cable {connection} exists")
                 continue
 
             cable = connection.cable or self._infer_cable(connection)
             # A port that is already cabled elsewhere has to be freed first,
-            # otherwise PT simply refuses the new link.
+            # otherwise PT simply refuses the new link. Not needed for an
+            # endpoint about to be deleted/recreated: its cables vanish with
+            # the device itself.
             for device, port in (
                 (connection.device_a, connection.port_a),
                 (connection.device_b, connection.port_b),
             ):
+                if device in self._recreated_devices:
+                    continue
                 if self.topology.port_is_cabled(device, port):
                     self.plan.actions.append(
                         Action(

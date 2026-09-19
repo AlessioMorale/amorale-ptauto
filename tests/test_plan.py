@@ -239,6 +239,17 @@ def test_a_wrong_model_warns_but_does_not_replace_by_default(fake_pt, spec):
     assert build(fake_pt, spec, prune=True).by_kind("replace_device")
 
 
+def test_a_replaced_devices_cable_is_replanned_not_marked_unchanged(fake_pt, spec):
+    # R1's cable to SW1 is destroyed along with R1 when it is replaced; a
+    # plan that calls it "unchanged" would leave R1 uncabled after apply.
+    converge(fake_pt)
+    fake_pt.devices["R1"].model = "1941"
+    plan = build(fake_pt, spec, prune=True)
+    links = [a for a in plan.by_kind("create_link") if "R1" in a.target]
+    assert links, [a.summary for a in plan.actions]
+    assert not any("R1:GigabitEthernet0/0" in u for u in plan.unchanged)
+
+
 # --- ordering --------------------------------------------------------------------
 
 
