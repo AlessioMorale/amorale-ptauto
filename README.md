@@ -6,22 +6,41 @@
 Describe a network in YAML; `ptauto` builds it in a running Packet Tracer,
 keeps it that way, and gives a pytest suite the fixtures to prove it works.
 
-The package on PyPI is `amorale-ptauto`; the import and the CLI stay `ptauto`
+The package on PyPI is `amorale-ptauto`; the import stays `import ptauto`
 either way — `amorale-` is only a namespacing prefix on the distribution name.
+The CLI answers to either name, so no install is needed to try it:
 
 ```bash
-pip install amorale-ptauto        # or: uv add amorale-ptauto
-
-ptauto validate examples/two-site-guest-wifi.yaml     # check the file
-ptauto apply    examples/two-site-guest-wifi.yaml     # build it in Packet Tracer
-ptauto apply    examples/two-site-guest-wifi.yaml     # ...and again: nothing happens
-ptauto test     examples/two-site-guest-wifi.yaml tests_network/two_site/
+uvx amorale-ptauto status     # is Packet Tracer reachable right now?
+uvx amorale-ptauto models     # what device models can a spec use?
 ```
 
-Working from a clone of this repository instead of the published package:
+To follow along with the example below, clone this repository first — it
+needs the spec and test files in it:
+
+```bash
+git clone https://github.com/alessiomorale/amorale-ptauto
+cd amorale-ptauto
+
+uvx amorale-ptauto validate examples/two-site-guest-wifi.yaml     # check the file
+uvx amorale-ptauto apply    examples/two-site-guest-wifi.yaml     # build it in Packet Tracer
+uvx amorale-ptauto apply    examples/two-site-guest-wifi.yaml     # ...and again: nothing happens
+uvx amorale-ptauto test     examples/two-site-guest-wifi.yaml tests_network/two_site/
+```
+
+`uvx amorale-ptauto ...` re-resolves the environment each call (uv caches it,
+so repeat calls are fast); for a persistent `ptauto` on your PATH instead:
+
+```bash
+pip install amorale-ptauto        # or: uv tool install amorale-ptauto
+ptauto validate examples/two-site-guest-wifi.yaml
+```
+
+Working on ptauto itself from a clone, rather than the published package:
 
 ```bash
 uv sync
+uv run ptauto validate examples/two-site-guest-wifi.yaml
 ```
 
 Running `apply` a second time reports *"Nothing to do — Packet Tracer matches

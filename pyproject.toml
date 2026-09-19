@@ -64,7 +64,12 @@ Repository = "https://github.com/alessiomorale/amorale-ptauto"
 Issues = "https://github.com/alessiomorale/amorale-ptauto/issues"
 
 [project.scripts]
+# Two names for the same command. `uvx amorale-ptauto ...` needs a script
+# literally named after the distribution — that's how `uvx` (`uv tool run`)
+# picks the executable when none is given explicitly — while `ptauto` is the
+# short name anyone who `pip install`s or `uv add`s the package actually types.
 ptauto = "ptauto.cli:app"
+amorale-ptauto = "ptauto.cli:app"
 
 # The pytest fixtures ship with the library: installing ptauto is enough for a
 # test suite to use `pt_network`, `pt_ping`, … with no conftest boilerplate.
