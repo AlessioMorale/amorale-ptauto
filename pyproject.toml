@@ -81,6 +81,14 @@ ptauto = "ptauto.pytest_plugin"
 [tool.hatch.version]
 source = "vcs"
 
+[tool.hatch.version.raw-options]
+# PyPI rejects any version with a local segment (+g<hash>...) outright. The
+# default scheme adds one whenever the tree isn't byte-for-byte clean at
+# build time (e.g. `uv sync` touching uv.lock in the same CI job), which is
+# exactly the failure this avoids: publish.yml sequences sync/test/build in
+# one checkout, so "clean" isn't guaranteed by the time this runs.
+local_scheme = "no-local-version"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/ptauto"]
 
