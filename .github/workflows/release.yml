@@ -4,11 +4,13 @@ name: Release
 # Conventional Commits since the last release to decide whether a version
 # bump is due (fix: -> patch, feat: -> minor, a `BREAKING CHANGE:` footer or
 # `!` -> major), and if so:
-#   - bumps `version` in pyproject.toml
-#   - updates CHANGELOG.md
-#   - commits that as `chore(release): X.Y.Z [skip ci]` on main
-#   - tags the commit `vX.Y.Z` and pushes the tag
-#   - publishes a GitHub Release for the tag
+#   - tags the current commit on main `vX.Y.Z` and pushes the tag
+#   - publishes a GitHub Release for it, with generated notes
+#
+# No release commit: `commit: false` below means it never bumps a version
+# file or touches CHANGELOG.md in the repo. The package version comes from
+# hatch-vcs reading the tag at build time (see pyproject.toml), so there is
+# nothing to bump.
 #
 # This workflow's own completion is what triggers publish.yml to build and
 # upload to PyPI (see that file); this workflow never publishes a package
@@ -48,3 +50,9 @@ jobs:
         uses: python-semantic-release/python-semantic-release@v10.6.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          commit: false
+          tag: true
+          push: true
+          changelog: true
+          vcs_release: true
+          build: false

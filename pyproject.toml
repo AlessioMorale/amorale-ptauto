@@ -1,8 +1,10 @@
 [build-system]
 # PEP 639 (`license` as an SPDX expression + `license-files`) needs hatchling
 # >=1.27; below that floor a wheel builds without a declared license and PyPI
-# rejects the upload at publish time, not at build time.
-requires = ["hatchling>=1.27"]
+# rejects the upload at publish time, not at build time. hatch-vcs derives
+# the version below from the git tag rather than a version this file stores,
+# so nothing here ever needs a release commit to bump it.
+requires = ["hatchling>=1.27", "hatch-vcs>=0.4"]
 build-backend = "hatchling.build"
 
 [project]
@@ -10,7 +12,7 @@ build-backend = "hatchling.build"
 # of the import name: `import ptauto` keeps working regardless, because that
 # is set by `[tool.hatch.build.targets.wheel].packages` below, not by this.
 name = "amorale-ptauto"
-version = "1.0.0"
+dynamic = ["version"]
 description = "Declarative, idempotent network building and testing for Cisco Packet Tracer"
 readme = "README.md"
 license = "MIT"
@@ -76,6 +78,9 @@ amorale-ptauto = "ptauto.cli:app"
 [project.entry-points.pytest11]
 ptauto = "ptauto.pytest_plugin"
 
+[tool.hatch.version]
+source = "vcs"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/ptauto"]
 
@@ -97,15 +102,15 @@ dev = ["pytest>=8"]
 [tool.semantic_release]
 # Conventional Commits on `main` drive the version: `fix:` -> patch, `feat:`
 # -> minor, a `BREAKING CHANGE:` footer (or `!` after the type) -> major.
-# python-semantic-release reads/writes the version here rather than in a
-# separate __version__ file, so pyproject.toml stays the single source.
-version_toml = ["pyproject.toml:project.version"]
-# No build_command: this action runs in its own container without `uv`, and
-# publish.yml already runs `uv build` on the runner once this tags a release.
+# There is no version_toml/version_variables entry here on purpose: the
+# version above comes from hatch-vcs reading the git tag at build time, so
+# there is no file for semantic-release to bump or commit. release.yml runs
+# it with commit: false; it only tags the existing commit and pushes the
+# tag. No build_command either: that action runs in its own container
+# without `uv`, and publish.yml already runs `uv build` on the runner once
+# this tags a release.
 tag_format = "v{version}"
 major_on_zero = false
-commit_message = "chore(release): {version} [skip ci]"
-commit_author = "github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
 
 [tool.semantic_release.branches.main]
 match = "main"

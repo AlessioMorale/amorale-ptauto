@@ -14,6 +14,9 @@ authentication and the file mailbox fallback) is reused from the
 
 from __future__ import annotations
 
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _pkg_version
+
 from .apply import Applier, ApplyReport, wait_for_dhcp
 from .client import HostState, ObservedTopology, PingResult, PTClient
 from .errors import BridgeError, PtAutoError, PTError, PTTimeout, SpecError
@@ -23,7 +26,10 @@ from .plan import Action, Plan, Planner
 from .testing import Network
 from .transport import BridgeTransport
 
-__version__ = "0.1.0"
+try:
+    __version__ = _pkg_version("amorale-ptauto")
+except PackageNotFoundError:  # running from source, not installed
+    __version__ = "0.0.0"
 
 __all__ = [
     "Action",
