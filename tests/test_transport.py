@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import threading
+import time
 import urllib.request
 
 import pytest
@@ -88,3 +89,46 @@ def test_every_request_carries_the_token(transport):
     unsigned = urllib.request.Request(f"{transport.base_url}/status")
     with pytest.raises(Exception):
         urllib.request.urlopen(unsigned, timeout=2.0)
+
+
+def test_a_freshly_started_bridge_waits_for_packet_tracers_first_poll():
+    """The regression that made ptauto look broken against a healthy PT.
+
+    When no MCP server holds the port, ptauto starts its own bridge and then
+    asked it, microseconds later, whether PT had polled. It never had, so every
+    short-lived CLI run reported "PT polling no" and exited, tearing the
+    listener down before the webview's 500 ms tick could reach it.
+    """
+    transport = BridgeTransport(port=0, token=TOKEN)
+
+    def late_packet_tracer():
+        # PT cannot poll before the port is bound, and does not poll the instant
+        # it is: this stands in for the tick ptauto used to run away from.
+        deadline = time.monotonic() + 5.0
+        while transport._own_bridge is None and time.monotonic() < deadline:
+            time.sleep(0.01)
+        time.sleep(0.3)
+        transport._get(f"{transport.base_url}/next", timeout=5.0)
+
+    thread = threading.Thread(target=late_packet_tracer, daemon=True)
+    thread.start()
+    try:
+        assert transport.status().channel == "http"
+    finally:
+        thread.join(timeout=5.0)
+        if transport._own_bridge is not None:
+            transport._own_bridge.stop()
+
+
+def test_the_first_poll_wait_happens_once_and_does_not_delay_later_calls():
+    transport = BridgeTransport(port=0, token=TOKEN)
+    try:
+        # No PT at all: the first call pays the wait and reports honestly.
+        assert transport.status().channel == ""
+        assert transport._awaited_first_poll
+        started = time.monotonic()
+        assert transport.status().channel == ""
+        assert time.monotonic() - started < 1.0
+    finally:
+        if transport._own_bridge is not None:
+            transport._own_bridge.stop()

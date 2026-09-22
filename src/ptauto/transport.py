@@ -17,6 +17,7 @@ re-expressed here against the same endpoints and the same wire format: POST
 from __future__ import annotations
 
 import json
+import time
 import urllib.parse
 import urllib.request
 from dataclasses import dataclass, field
@@ -34,6 +35,13 @@ from packet_tracer_mcp.infrastructure.execution.live_bridge import (
 )
 
 from .errors import BridgeError
+
+# The PT webview polls on a 500 ms tick against a 2 s long-poll on /next, so a
+# bridge we just bound has no poll recorded yet. Reading "connected" straight
+# after start() therefore always says no, and a short-lived CLI process exits
+# before PT ever gets to answer. Only a bridge we started needs this wait: one
+# already listening has been polled for a while.
+FIRST_POLL_WAIT_S = 3.0
 
 NO_PT_MESSAGE = (
     "Packet Tracer is not reachable on any channel.\n"
@@ -80,6 +88,7 @@ class BridgeTransport:
         self._token = token
         self._autostart = autostart
         self._own_bridge: PTCommandBridge | None = None
+        self._awaited_first_poll = False
         self._file_bridge = FileBridge()
 
     # -- plumbing -------------------------------------------------------
@@ -161,7 +170,29 @@ class BridgeTransport:
                 self._own_bridge = bridge
             except OSError:
                 return False
-        return self.identity() == "ours"
+        if self.identity() != "ours":
+            return False
+        self._await_first_poll()
+        return True
+
+    def _await_first_poll(self, timeout: float = FIRST_POLL_WAIT_S) -> bool:
+        """Give a bridge we just started time for PT's first poll to land.
+
+        Runs at most once per process, and only for our own bridge: without it
+        every `ptauto` invocation made while no MCP server holds the port reports
+        "PT polling no" against a perfectly healthy Packet Tracer, because the
+        answer is read milliseconds after bind.
+        """
+        if self._own_bridge is None or self._awaited_first_poll:
+            return self.pt_connected()
+        self._awaited_first_poll = True
+        deadline = time.monotonic() + timeout
+        while True:
+            if self.pt_connected():
+                return True
+            if time.monotonic() >= deadline:
+                return False
+            time.sleep(0.1)
 
     def channel(self) -> str:
         """'http' | 'file' | '': the channel a command would take right now."""
